@@ -32,4 +32,62 @@ router.get("/logout", async (req, res) => {
 	}
 });
 
+// router.post("/forgotPassword", async (req, res) => {
+//   try {
+// 	const user = await User.findOne({ where: { email } });
+//     const guid = uuidv4()
+//     const code = customAlphabet('1234567890', 6)()
+//     await VerificationCodeHolder.create({
+//       verificationCode: code,
+//       guid: guid,
+//       userID: user.id
+//     })
+//     const msg = {
+//       to: email,
+//       from: 'test@gmail.com',
+//       subject: `Forgot your password? Don't worry...`,
+//       html: `<html><body><h1>Forgot your password?</h1><p>That\'s okay, it happens! use ${code} code to reset your password</p></body></html>`,
+//     }
+//     await sgMail.send(msg)
+//   } catch (error) {
+//     res.status(400).send(error.message);
+//   }
+// });
+
+// router.get("/checkVerification", async (req, res) => {
+// 	try {
+// 	  const verificationCode = await VerificationCodeHolder.findOne({
+// 		where: {
+// 		  verificationCode: guid,
+// 		},
+// 	  });
+// 	  if (!verificationCode) {
+// 		throw new Error("Invalid Verification code");
+// 	  }
+// 	  return verificationCode;
+// 	} catch (error) {
+// 	  res.status(400).send(error.message);
+// 	}
+//   });
+  
+//   router.post("/resetPassword", async(req,res) => {
+// 	try{
+// 		const verificationCode = await this.checkVerification(guid)
+// 		console.log(verificationCode.toJSON())
+// 		const user = await User.findByPk(verificationCode.userID);
+// 		if (!user) throw new Error("User does not exist");
+// 		const validPassword = await User.validatePassword(newPassword);
+// 		if (!validPassword) throw new Error("Not a valid password");
+// 		user.passwordHash = await User.hashPassword(newPassword);
+// 		console.log(user.toJSON())
+// 		await user.save();
+// 		console.log(user.toJSON())
+// 		await verificationCode.destroy();
+// 	}catch(error){
+// 		res.status(400).send(error.message);
+// 	}
+//   })
+  
+ 
+
 export default router;
