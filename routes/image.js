@@ -30,9 +30,25 @@ router.get('/getImagesByUser', validateToken, async(req,res) => {
 
 // createImage------
 
+router.post('/', validateToken, async(req,res) => {
+	try{
+
+		console.log('req.body', req.body)
+		res.send({})
+		// const image = await models.Image.createImage(req.body, req.user.id)
+		// res.status(201).json({
+		// 	message: "Image created successfully",
+		// 	data: image
+		// })
+	}catch(error){
+		res.status(400).send(error.message)
+	}
+})
+
+
 router.get("/:id", validateToken, async (req, res) => {
 	try {
-		const image = await  models.Image.findByPk(req.params.id)
+		const image = await models.Image.findByPk(req.params.id)
 		res.status(200).json({ data: image })
 	} catch (error) {
 		res.status(400).send(error.message)

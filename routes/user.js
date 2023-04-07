@@ -1,7 +1,6 @@
 import express from "express";
 import { validateToken } from "../middlewares/auth";
 import models from "../models";
-const { customAlphabet } = require("nanoid");
 const sgMail = require("@sendgrid/mail");
 const { SENDGRID_API_KEY } = require("../config");
 
@@ -77,26 +76,6 @@ router.put("/updateUser", validateToken, async (req, res) => {
     res.status(400).send(error.message);
   }
 });
-
-router.post("/changePassword", async (req, res) => {
-  try {
-    const { id, password } = req.body;
-    const user = await models.User.findOne({
-      where: { id },
-    });
-    if (!user) throw new Error("Invalid User");
-    const isValid = models.User.validatePassword(password);
-    if (!isValid) throw new Error("Invalid Data");
-    user.set({
-      passwordHash: await models.User.hashPassword(password),
-    });
-    await user.save();
-    res.status(200).json(user.toUserJson());
-  } catch (error) {
-    res.status(400).send(error.message);
-  }
-});
-
 
 
 
