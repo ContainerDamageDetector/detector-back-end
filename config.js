@@ -3,4 +3,10 @@ module.exports = {
     ACCESS_TOKEN_LIFE: 60 * 60 * 24 * 7 ,
     REFRESH_TOKEN_SECRET: '3bb9071e359e41dd90637a28d93fade6',
     REFRESH_TOKEN_LIFE: 60 * 60 * 24 * 90,
+    awsConfig: {
+        key: "AKIA5OSYVVF3F5WPQHEY",
+        secret: "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",
+        region: "ap-south-1",
+        bucket: "container-damage-detector"
+    },
 }

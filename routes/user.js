@@ -1,8 +1,6 @@
 import express from "express";
 import { validateToken } from "../middlewares/auth";
 import models from "../models";
-const sgMail = require("@sendgrid/mail");
-const { SENDGRID_API_KEY } = require("../config");
 
 const router = express.Router();
 
