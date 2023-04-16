@@ -1,44 +1,24 @@
 import express from "express";
-import { v4 as uuidv4 } from 'uuid';
-
+import { v4 as uuidv4 } from "uuid";
 import models from "../models";
 const config = require("../config");
 import { validateToken } from "../middlewares/auth";
-import multer from "multer";
-import { S3Client, AbortMultipartUploadCommand } from "@aws-sdk/client-s3";
-import dotenv from "dotenv";
 const AWS = require("aws-sdk");
+const { Image } = require("../models");
 
 const router = express.Router();
+const {default: axios} = require('axios-https-proxy-fix');
+// const axios = require('axios/dist/browser/axios.cjs');
 const fileUpload = require("express-fileupload");
-
 router.use(fileUpload());
 
-
-
-dotenv.config();
-
-const bucketName = process.env.BUCKET_NAME;
-const bucketRegion = process.env.BUCKET_REGION;
-const accessKey = process.env.ACCESS_KEY;
-const secretAccessKey = process.env.SECRET_ACCESSS_KEY;
-
-const s3 = new S3Client({
-  credentials: {
-    accessKey: accessKey,
-    secretAccessKey: secretAccessKey,
-  },
-  region: bucketRegion,
-});
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
-upload.single("avatar");
-
-router.get("/imgall1", async (req, res) => {
+router.get("/damageList", async (req, res) => {
   try {
-    const images = await models.Image.findAll({ include: { all: true } });
+      const images = await models.Image.findAll({ 
+      attributes: ['title','imageUrl','damage_type', 'severity', 'recover_price'],
+
+    });
+    
     res.status(200).json(images);
   } catch (error) {
     res.status(400).send(error.message);
@@ -61,108 +41,72 @@ router.get("/getImagesByUser", validateToken, async (req, res) => {
 
 // createImage------
 
-router.post("/", async (req, res) => {
-  console.log("req.body", req.body);
-  res.send({});
-  const s3Url = imageUrl.replace(
-    `https://${config.awsConfig.bucket}.s3.amazonaws.com`,
-    `s3://${config.awsConfig.bucket}`
-  );
+router.post("/",  async (req, res) => {
+  try {
+    const { title, imageUrl } = req.body;
+    // if (!userId) throw new Error("Unauthenticated User");
+    // const isValid = models.Image.isValid({
+    //   title,
+    //   imageUrl,
+    // });
+    // if (!isValid) throw new Error("Invalid Data");
 
-  // AWS.config.update({
-  // 		accessKeyId: `${config.awsConfig.key}`,
-  // 		secretAccessKey: `${config.awsConfig.secret}`,
-  // 		region: `${config.awsConfig.region}`
-  // 	})
+    const s3Url = imageUrl.replace(
+      `https://${config.awsConfig.bucket}.s3.amazonaws.com`,
+      `s3://${config.awsConfig.bucket}`
+    );
 
-  // 	const s3 = new AWS.S3();
-  // 	const fileContent = Buffer.from("file", 'binary');
-  // 	const params = {
-  // 		Bucket: `${config.awsConfig.bucket}`,
-  // 		Key: req.files.data.name,
-  // 		Body: fileContent
-  // 	}
+    // const predictionData_damageType = await axios
+    //   .post(config.predictionServerUrl, `url=${s3Url}`)
+    //   .then((res) => res.data);
 
-  // 	s3.upload(params, (err,data) => {
-  // 		if(err){
-  // 			throw err;
-  // 		}
-  // 		res.send({
-  // 			"response_code" : 200,
-  // 			"response_message" : "Image created successfully",
-  // 			"response_data" : data
+    const image = await models.Image.create({
+      title,
+      imageUrl,
+      UserId: 1,
+      damage_type: 'cut',  //predictionData_damageType,
+      severity: "severe",
+      recover_price: 10,
+    });
 
-  // 		});
-  // 	})
+    res.status(200).json({
+      image
+    });
 
-  // try{
-  // AWS.config.update({
-  // 	accessKeyId: 'AKIA5OSYVVF3F5WPQHEY',
-  // 	secretAccessKey: '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',
-  // 	region: 'ap-south-1'
-  // })
-
-  // const s3 = new AWS.S3();
-  // const fileContent = Buffer.from(req.files.data.data, 'binary');
-  // const params = {
-  // 	Bucket: 'container-damage-detector',
-  // 	Key: req.files.data.name,
-  // 	Body: fileContent
-  // }
-
-  // s3.upload(params, (err,data) => {
-  // 	if(err){
-  // 		throw err;
-  // 	}
-  // 	res.send({
-  // 		"response_code" : 200,
-  // 		"response_message" : "Image created successfully",
-  // 		"response_data" : data
-
-  // 	});
-  // })
-
-  // console.log('req.body', req.body)
-  // res.send({})
-  // const image = await models.Image.createImage(req.body, req.user.id)
-  // res.status(201).json({
-  // 	message: "Image created successfully",
-  // 	data: image
-  // })
-  // }catch(error){
-  // 	res.status(400).send(error.message)
-  // }
+  } catch (error) {
+    res.status(400).send(error.message);
+  }
 });
 
-router.get('/getPresignedUrl', async (req, res) => {
+router.get("/getPresignedUrl", async (req, res) => {
   try {
-    const type = req.query.type || 'modelimage';
+    const type = req.query.type || "modelimage";
     const data = awsTypeData[type];
 
     const s3 = new AWS.S3({
       accessKeyId: config.awsConfig.key,
       secretAccessKey: config.awsConfig.secret,
       region: config.awsConfig.region,
-      apiVersion: '2006-03-01',
-      signatureVersion: 'v4',
+      apiVersion: "2006-03-01",
+      signatureVersion: "v4",
+      // ACL: "public-read",
     });
 
     const randomId = uuidv4();
 
     const s3Params = {
-      Bucket: config.awsConfig.bucket ,
+      Bucket: config.awsConfig.bucket,
       Key: `uploads/${data.folderName}/${randomId}.${data.extension}`,
       Expires: 240, // URL expiration time in seconds
       ContentType: data.fileType,
-      ACL: "public-read", 
     };
 
     const signedUrl = await s3.getSignedUrlPromise("putObject", s3Params);
 
     res.status(200).json({
-      message: 'Presigned URL created',
+      message: "Presigned URL created",
       signedUrl: signedUrl,
-      imageUrl: `https://${config.awsConfig.bucket}.s3.amazonaws.com/uploads/${data.folderName}${randomId}.${data.extension}`
+      imageUrl: `https://${config.awsConfig.bucket}.s3.amazonaws.com/uploads/${data.folderName}${randomId}.${data.extension}`,
     });
   } catch (error) {
     res.status(400).send(error.message);

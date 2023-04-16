@@ -1,23 +1,22 @@
 "use strict";
-
 const { Model } = require("sequelize");
 const yup = require("yup");
 
 const schema = yup.object().shape({
-  // imageUrl: yup.string().url().required(),
+  title: yup.string().required(),
+  imageUrl: yup.string().url().required(),
 });
 
 module.exports = (sequelize, DataTypes) => {
   class Image extends Model {
-    // static isValid = Image.validateImageData({
-    //   imageUrl,
-    // });
-    // static validateImageData(data) {
-    //   return schema.isValidSync(data);
-    // }
-    // static associate(models) {
-    //   Image.belongsTo(models.User);
-    // }
+    static isValid(title, imageUrl) {
+      const data = { title, imageUrl };
+      return schema.isValidSync(data);
+    }
+
+    static associate(models) {
+      Image.belongsTo(models.User);
+    }
 
     toImageJson() {
       const imageJson = this.toJSON();

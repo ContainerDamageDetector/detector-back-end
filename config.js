@@ -9,4 +9,5 @@ module.exports = {
         region: "ap-south-1",
         bucket: "container-damage-detector"
     },
+    predictionServerUrl: "http://127.0.0.1:5000/predictDamageType"
 }
