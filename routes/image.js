@@ -7,18 +7,15 @@ const AWS = require("aws-sdk");
 const { Image } = require("../models");
 
 const router = express.Router();
-const {default: axios} = require('axios-https-proxy-fix');
+const { default: axios } = require("axios-https-proxy-fix");
 // const axios = require('axios/dist/browser/axios.cjs');
 const fileUpload = require("express-fileupload");
 router.use(fileUpload());
 
 router.get("/damageList", async (req, res) => {
   try {
-      const images = await models.Image.findAll({ 
-      attributes: ['title','imageUrl','damage_type', 'severity', 'recover_price'],
+    const images = await models.Image.findAll({});
 
-    });
-    
     res.status(200).json(images);
   } catch (error) {
     res.status(400).send(error.message);
@@ -41,7 +38,7 @@ router.get("/getImagesByUser", validateToken, async (req, res) => {
 
 // createImage------
 
-router.post("/",  async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { title, imageUrl } = req.body;
     // if (!userId) throw new Error("Unauthenticated User");
@@ -56,23 +53,36 @@ router.post("/",  async (req, res) => {
       `s3://${config.awsConfig.bucket}`
     );
 
-    // const predictionData_damageType = await axios
-    //   .post(config.predictionServerUrl, `url=${s3Url}`)
-    //   .then((res) => res.data);
+    console.log(s3Url)
+
+    const predictionData_damageType = await axios
+      .post(config.damage_predictionServerUrl, `url=${s3Url}`)
+      .then((res) => res.data);
+
+    const predictionData_severeType = await axios
+      .post(config.severity_predictionServerUrl, `url=${s3Url}`)
+      .then((res) => res.data);
+
+    const predictionData_recoverPrice = await axios
+      .post(config.predictionServerUrl, `url=${s3Url}`)
+      .then((res) => res.data);
+
+    // console.log("predictionData_damageType", predictionData_damageType);
+    // console.log("predictionData_severeType", predictionData_severeType);
+    // console.log("predictionData_damageType", predictionData_recoverPrice);
 
     const image = await models.Image.create({
       title,
       imageUrl,
-      UserId: 1,
-      damage_type: 'cut',  //predictionData_damageType,
-      severity: "severe",
-      recover_price: 10,
+      UserId: 1 ,//GET user Id,
+      damage_type: predictionData_damageType,
+      severity:  predictionData_severeType,
+      recover_price: predictionData_recoverPrice
     });
 
     res.status(200).json({
-      image
+      image,
     });
-
   } catch (error) {
     res.status(400).send(error.message);
   }
@@ -106,14 +116,14 @@ router.get("/getPresignedUrl", async (req, res) => {
     res.status(200).json({
       message: "Presigned URL created",
       signedUrl: signedUrl,
-      imageUrl: `https://${config.awsConfig.bucket}.s3.amazonaws.com/uploads/${data.folderName}${randomId}.${data.extension}`,
+      imageUrl: `https://${config.awsConfig.bucket}.s3.amazonaws.com/uploads/${data.folderName}/${randomId}.${data.extension}`,
     });
   } catch (error) {
     res.status(400).send(error.message);
   }
 });
 
-router.get("/:id", validateToken, async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const image = await models.Image.findByPk(req.params.id);
     res.status(200).json({ data: image });
