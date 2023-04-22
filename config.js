@@ -11,5 +11,5 @@ module.exports = {
     },
     damage_predictionServerUrl: "http://127.0.0.1:5000/predictDamageType",
     severity_predictionServerUrl: "http://127.0.0.1:5000/predictSevereType",
-    severity_predictionServerUrl: "http://127.0.0.1:5000/estimateRecoverPrice"
+    estimateRecoverPrice_predictionServerUrl: "http://127.0.0.1:5000/estimateRecoverPrice"
 }
