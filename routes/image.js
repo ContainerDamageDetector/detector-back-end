@@ -18,7 +18,8 @@ router.use(fileUpload());
 router.get("/damageList", async (req, res) => {
   try {
     const images = await models.Image.findAll({
-      attributes: ['id', 'title', 'imageUrl', 'damage_type', 'severity']
+      attributes: ['id', 'title', 'imageUrl', 'damage_type', 'severity'],
+      order: [['createdAt', 'DESC']]
     });
 
     res.status(200).json(images);
@@ -30,7 +31,8 @@ router.get("/damageList", async (req, res) => {
 router.get("/recoverPriceList", async (req, res) => {
   try {
     const images = await models.Image.findAll({
-      attributes: ['id','title', 'imageUrl', 'recover_price']
+      attributes: ['id','title', 'imageUrl', 'recover_price'],
+      order: [['createdAt', 'DESC']]
     });
 
     res.status(200).json(images);
@@ -97,7 +99,7 @@ router.post("/", async (req, res) => {
       UserId: 1, //GET user Id,
       damage_type: predictionData_damageType,
       severity: predictionData_severeType,
-      recover_price: price
+      recover_price: price.toFixed(2)
     });
 
     res.status(200).json({
