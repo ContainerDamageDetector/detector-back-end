@@ -6,6 +6,7 @@ const yup = require("yup");
 
 const config = require("../config");
 
+//validation schema using Yup
 const schema = yup.object().shape({
   username: yup.string().required(),
   fullName: yup.string().required(),
@@ -25,10 +26,12 @@ module.exports = (sequelize, DataTypes) => {
       return schema.isValidSync(data);
     }
 
+    //validate a given password 
     static validatePassword(password) {
       return yup.reach(schema, "password").isValidSync(password);
     }
 
+    //resolves to a hashed version of the password
     static hashPassword(password) {
       return bcrypt.hash(password, 10);
     }
@@ -37,6 +40,7 @@ module.exports = (sequelize, DataTypes) => {
       return bcrypt.compare(password, this.passwordHash);
     }
 
+    //generates an access token and a refresh token
     generateTokens() {
       let payload = {
         id: this.id,
@@ -57,6 +61,7 @@ module.exports = (sequelize, DataTypes) => {
       };
     }
 
+    // returns user's data as a JSON object
     toUserJson() {
       const userJson = this.toJSON();
       delete userJson.passwordHash;

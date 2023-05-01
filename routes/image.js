@@ -11,10 +11,11 @@ const s3 = new AWS.S3();
 
 const router = express.Router();
 const { default: axios } = require("axios-https-proxy-fix");
-// const axios = require('axios/dist/browser/axios.cjs');
 const fileUpload = require("express-fileupload");
 router.use(fileUpload());
 
+
+//  Retrieves the list of damages
 router.get("/damageList", async (req, res) => {
   try {
     const images = await models.Image.findAll({
@@ -28,6 +29,7 @@ router.get("/damageList", async (req, res) => {
   }
 });
 
+// Retrieves the list of recover price
 router.get("/recoverPriceList", async (req, res) => {
   try {
     const images = await models.Image.findAll({
@@ -41,6 +43,7 @@ router.get("/recoverPriceList", async (req, res) => {
   }
 });
 
+// Retrieves the image details by userId
 router.get("/getImagesByUser", validateToken, async (req, res) => {
   try {
     const images = await models.Image.findAll({
@@ -55,8 +58,7 @@ router.get("/getImagesByUser", validateToken, async (req, res) => {
   }
 });
 
-// createImage------
-
+// Insert the uploaded image details to db
 router.post("/", async (req, res) => {
   try {
     const { title, imageUrl } = req.body;
@@ -67,6 +69,7 @@ router.post("/", async (req, res) => {
     // });
     // if (!isValid) throw new Error("Invalid Data");
 
+    // Replaces a string in the "imageUrl" variable to convert an Amazon S3 URL to an S3 URI.
     const s3Url = imageUrl.replace(
       `https://${config.awsConfig.bucket}.s3.amazonaws.com`,
       `s3://${config.awsConfig.bucket}`
@@ -74,25 +77,25 @@ router.post("/", async (req, res) => {
 
     console.log(s3Url);
 
+    // POST request to damage type prediction server with parameter "url" response data assigned to predictionData_damageType
     const predictionData_damageType = await axios
       .post(config.damage_predictionServerUrl, `url=${s3Url}`)
       .then((res) => res.data);
 
+    // POST request to severity prediction server with parameter "url" response data assigned to predictionData_severeType
     const predictionData_severeType = await axios
       .post(config.severity_predictionServerUrl, `url=${s3Url}`)
       .then((res) => res.data);
 
+    // POST request to recover price prediction server with parameter "url" response data assigned to predictionData_recoverPrice
     const predictionData_recoverPrice = await axios
       .post(config.estimateRecoverPrice_predictionServerUrl, `url=${s3Url}`)
       .then((res) => res.data);
 
+      //converts the string value to float
     const price = parseFloat(predictionData_recoverPrice.replace('[','').replace(']',''));;
-    // const price = DataTypes.DECIMAL(10, 2);
 
-    // console.log("predictionData_damageType", predictionData_damageType);
-    // console.log("predictionData_severeType", predictionData_severeType);
-    // console.log("predictionData_damageType", predictionData_recoverPrice);
-
+    //creates a new image record in the database of Image table
     const image = await models.Image.create({
       title,
       imageUrl,
@@ -110,11 +113,13 @@ router.post("/", async (req, res) => {
   }
 });
 
+//  Retrieves a pre-signed URL to upload a file to Amazon S3
 router.get("/getPresignedUrl", async (req, res) => {
   try {
     const type = req.query.type || "modelimage";
     const data = awsTypeData[type];
 
+    // AWS SDK S3 class instance with specified configuration
     const s3 = new AWS.S3({
       accessKeyId: config.awsConfig.key,
       secretAccessKey: config.awsConfig.secret,
@@ -133,6 +138,7 @@ router.get("/getPresignedUrl", async (req, res) => {
       ContentType: data.fileType,
     };
 
+    // Defines s3Params for pre-signed URL
     const signedUrl = await s3.getSignedUrlPromise("putObject", s3Params);
 
     res.status(200).json({
@@ -145,6 +151,7 @@ router.get("/getPresignedUrl", async (req, res) => {
   }
 });
 
+//retrieve a single image record by id
 router.get("/:id", async (req, res) => {
   try {
     const image = await models.Image.findByPk(req.params.id);
@@ -154,6 +161,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+//retrieve a file from Amazon S3 by its key
 router.get("/:folder1/:folder2/:key", (req, res) => {
 
   const params = {
@@ -170,7 +178,7 @@ router.get("/:folder1/:folder2/:key", (req, res) => {
   });
 });
 
-
+//contains information about expected image file details
 const awsTypeData = {
   modelimage: {
     fileType: "image/jpeg",

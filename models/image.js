@@ -14,10 +14,12 @@ module.exports = (sequelize, DataTypes) => {
       return schema.isValidSync(data);
     }
 
+    //association between the Image model and the User model
     static associate(models) {
       Image.belongsTo(models.User);
     }
 
+    //returns a JSON representation of the Image model object
     toImageJson() {
       const imageJson = this.toJSON();
       return imageJson;

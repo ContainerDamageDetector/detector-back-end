@@ -6,6 +6,7 @@ const validateToken = async (req, res, next) => {
     if (!accessToken)
         return res.status(403).send()
     try {
+        //verifies a JWT access token stored in a cookie 
         const payload = jwt.verify(accessToken, config.ACCESS_TOKEN_SECRET)
         req.user = payload
         next()

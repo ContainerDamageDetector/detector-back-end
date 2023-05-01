@@ -4,6 +4,7 @@ import models from "../models";
 
 const router = express.Router();
 
+//retrieve all users
 router.get("/all", async (req, res) => {
   try {
     const users = await models.User.findAll({ include: { all: true } });
@@ -13,6 +14,7 @@ router.get("/all", async (req, res) => {
   }
 });
 
+//create new user
 router.post("/create", async (req, res) => {
   try {
     const { username, fullName, email, password, roles } = req.body;
@@ -38,6 +40,7 @@ router.post("/create", async (req, res) => {
   }
 });
 
+//retrieve user details by user id
 router.get("/:id", validateToken, async (req, res) => {
   try {
     const user = await models.User.findByPk(req.params.id);
@@ -47,6 +50,7 @@ router.get("/:id", validateToken, async (req, res) => {
   }
 });
 
+//update user details
 router.put("/updateUser", validateToken, async (req, res) => {
   try {
     const { id, username, fullName, email } = req.body;
